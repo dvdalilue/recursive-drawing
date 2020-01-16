@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Order in chaos</title>
+  <style type="text/css">
+    body, html { margin: 0px;}
+
+    #main-canvas {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <button type="button" class="btn btn-primary" onclick="setCanvasSize();" style="position: fixed;margin: 10px">Reset</button>
+  <canvas id="main-canvas">
+    Your browser does not support the canvas element.
+  </canvas>
+
+  <script>
+    var canvas = document.getElementById("main-canvas");
+    var ctx = canvas.getContext("2d");
+    var tdots = [];
+    const max_size = 3;
+
+    function drawPixel(x, y, r, g, b, a) {
+      var canvasData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      var index = (x + y * canvas.width) * 4;
+
+      canvasData.data[index + 0] = r;
+      canvasData.data[index + 1] = g;
+      canvasData.data[index + 2] = b;
+      canvasData.data[index + 3] = a;
+
+      ctx.putImageData(canvasData, 0, 0);
+    }
+
+    function setCanvasSize(){
+      ctx.canvas.width = document.documentElement.clientWidth;
+      ctx.canvas.height = document.documentElement.clientHeight - 6;
+      tdots = [];
+      canvas.addEventListener('click', drawMouseClickPos);
+    }
+
+    function getMousePos(canvas, evt) {
+      var rect = canvas.getBoundingClientRect();
+      return {
+        x: evt.clientX - rect.left,
+        y: evt.clientY - rect.top
+      };
+    }
+
+    function midpoint(a, b) {
+      var times = max_size - 2;
+
+      if (times < 1) { return; }
+
+      var res = b;
+
+      while (times > 0) {
+        res = {
+          x: Math.round((a.x + res.x) / 2),
+          y: Math.round((a.y + res.y) / 2)
+        };
+
+        times -= 1;
+      }
+
+      return res;
+    }
+
+    function drawMouseClickPos(evt) {
+      var position = getMousePos(canvas, evt);
+
+      if (tdots.length >= max_size) {
+        canvas.removeEventListener('click', drawMouseClickPos);
+        magic(position);
+      }
+
+      tdots.push(position);
+
+      drawPixel(position.x, position.y, 0, 0, 0, 255);
+    }
+
+    function magic(currentPosition) {
+      var rand = Math.floor(Math.random() * max_size);
+      currentPosition = midpoint(tdots[rand], currentPosition);
+      drawPixel(currentPosition.x, currentPosition.y, 0, 0, 0, 255);
+      setTimeout(magic.bind(null, currentPosition), 1);
+    }
+     
+    window.addEventListener("resize", setCanvasSize);
+
+    canvas.addEventListener('click', drawMouseClickPos);
+    
+    setCanvasSize();
+  </script>
+</body>
+</html>
